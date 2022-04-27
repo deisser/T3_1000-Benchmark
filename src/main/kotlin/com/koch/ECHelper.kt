@@ -1,11 +1,6 @@
 package com.koch
 
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
-import org.bouncycastle.asn1.x9.ECNamedCurveTable
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair
-import org.bouncycastle.crypto.generators.ECKeyPairGenerator
-import org.bouncycastle.crypto.params.ECDomainParameters
-import org.bouncycastle.crypto.params.ECKeyGenerationParameters
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.util.io.pem.PemReader
@@ -55,20 +50,6 @@ class ECHelper(private val myBenchmark: MyBenchmark.SetupClass) {
         } catch (e: Exception) {
             throw Exception("Unable to read PublicKey: $e")
         }
-    }
-
-    //TODO: Is needed? Glaube nicht
-    fun generateKeyPair(algorithm: String): AsymmetricCipherKeyPair {
-        val curve = ECNamedCurveTable.getByName(algorithm);
-        val domainParams = ECDomainParameters(curve.curve, curve.g, curve.n, curve.h, curve.seed)
-
-        val secureRandom = SecureRandom()
-        val keyParams = ECKeyGenerationParameters(domainParams, secureRandom)
-
-        //TODO: Original: ECKeyPairGenerator("ECDSA")
-        val generator = ECKeyPairGenerator()
-        generator.init(keyParams)
-        return generator.generateKeyPair()
     }
 
 }

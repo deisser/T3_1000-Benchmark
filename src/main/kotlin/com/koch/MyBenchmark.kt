@@ -54,11 +54,11 @@ open class MyBenchmark {
         val provider = "BC"
 
         //read all keys
-        val publicKey = ecHelper.readPublicKey("src/main/kotlin/com/koch/resources/secp521r1_public.pem")
-        val privateKey = ecHelper.readPrivateKey("src/main/kotlin/com/koch/resources/secp521r1_pkcs8_private.pem")
+        val publicKey = ecHelper.readPublicKey("src/main/resources/secp521r1_public.pem")
+        val privateKey = ecHelper.readPrivateKey("src/main/resources/secp521r1_pkcs8_private.pem")
 
         //read input file
-        private val inputPath: Path = Paths.get("sampledata/myfile.txt")
+        private val inputPath: Path = Paths.get("src/main/resources/myfile.txt")
         val input: ByteArray = Files.readAllBytes(inputPath)
 
         //sample signature
