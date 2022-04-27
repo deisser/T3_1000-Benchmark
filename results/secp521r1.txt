@@ -1,0 +1,27 @@
+JDK 17 mit "BC"
+Benchmark                              Mode  Cnt         Score         Error  Units
+MyBenchmark.baseline                  thrpt   30  60946127,929 ± 1765736,550  ops/s
+MyBenchmark.signBenchmark             thrpt   30        10,919 ±       0,102  ops/s
+MyBenchmark.signWihtoutHashBenchmark  thrpt   30        10,935 ±       0,085  ops/s
+MyBenchmark.verifyBenchmark           thrpt   30        27,154 ±       0,240  ops/s
+
+JDK 17 ohne "BC" provider
+Benchmark                              Mode  Cnt         Score         Error  Units
+MyBenchmark.baseline                  thrpt   30  54106480,448 ± 5295610,266  ops/s
+MyBenchmark.signBenchmark             thrpt   30        10,884 ±       0,091  ops/s
+MyBenchmark.signWihtoutHashBenchmark  thrpt   30        10,856 ±       0,170  ops/s
+MyBenchmark.verifyBenchmark           thrpt   30       288,939 ±       2,247  ops/s
+
+JDK corretto-11.0.15 ohne "BC"
+Benchmark                              Mode  Cnt         Score        Error  Units
+MyBenchmark.baseline                  thrpt   30  62269245,132 ± 605279,311  ops/s
+MyBenchmark.signBenchmark             thrpt   30        10,797 ±      0,126  ops/s
+MyBenchmark.signWihtoutHashBenchmark  thrpt   30        10,988 ±      0,087  ops/s
+MyBenchmark.verifyBenchmark           thrpt   30       285,857 ±      2,849  ops/s
+
+JDK corretto-11.0.15 mit "BC"
+Benchmark                              Mode  Cnt         Score        Error  Units
+MyBenchmark.baseline                  thrpt   30  62122018,236 ± 579621,404  ops/s
+MyBenchmark.signBenchmark             thrpt   30        10,949 ±      0,105  ops/s
+MyBenchmark.signWihtoutHashBenchmark  thrpt   30        10,920 ±      0,084  ops/s
+MyBenchmark.verifyBenchmark           thrpt   30        27,147 ±      0,204  ops/s
