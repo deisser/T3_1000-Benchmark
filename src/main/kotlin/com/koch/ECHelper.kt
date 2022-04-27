@@ -9,17 +9,17 @@ import java.io.FileReader
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
 
-class ECHelper(private val myBenchmark: MyBenchmark.SetupClass) {
-
+//TODO: Pfade zu den Keys entgegennehmen und laden
+class ECHelper() {
     fun generateECSignature(ecPrivate: PrivateKey, input: ByteArray): ByteArray {
-        val signature = Signature.getInstance("SHA256withECDSA", this.myBenchmark.provider)
+        val signature = Signature.getInstance("SHA256withECDSA", MyBenchmark.SetupClass.provider)
         signature.initSign(ecPrivate)
         signature.update(input)
         return signature.sign()
     }
 
     fun generateSHA256Hash(input: ByteArray): ByteArray {
-        val messageDigest = MessageDigest.getInstance("SHA-256", this.myBenchmark.provider)
+        val messageDigest = MessageDigest.getInstance("SHA-256", MyBenchmark.SetupClass.provider)
         messageDigest.update(input)
         return messageDigest.digest()
     }
@@ -39,7 +39,7 @@ class ECHelper(private val myBenchmark: MyBenchmark.SetupClass) {
 
     fun readPublicKey(path: String): PublicKey {
         val pubKeyFile = File(path)
-        val keyFactory = KeyFactory.getInstance("EC", this.myBenchmark.provider)
+        val keyFactory = KeyFactory.getInstance("EC", MyBenchmark.SetupClass.provider)
         return try {
             val keyReader = FileReader(pubKeyFile)
             val pemReader = PemReader(keyReader)
