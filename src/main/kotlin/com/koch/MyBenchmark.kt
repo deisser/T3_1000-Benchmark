@@ -33,9 +33,6 @@ package com.koch
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.openjdk.jmh.annotations.*
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.security.MessageDigest
 import java.security.Security
 import java.security.Signature
@@ -55,25 +52,27 @@ open class MyBenchmark {
             const val provider = "BC"
         }
 
-        private val ecHelper = ECHelper()
-
-        //read all keys
-        val publicKey = ecHelper.readPublicKey("src/main/resources/secp521r1_public.pem")
-        val privateKey = ecHelper.readPrivateKey("src/main/resources/secp521r1_pkcs8_private.pem")
+        val ecHelper =
+            ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
 
         //read input file
-        //TODO: Input überarbeiten, dass der get(){} arbeitet, damit Zusammengehörigkeit von inputPath und input klar ist
-        private val inputPath: Path = Paths.get("src/main/resources/myfile.txt")
-        val input: ByteArray = Files.readAllBytes(inputPath)
+        val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
 
-        val input2: ByteArray
+
+        /*val input: ByteArray
             get() {
-                val inputPath2: Path = Paths.get("src/main/resources/myfile.txt")
-                return Files.readAllBytes(inputPath)
-            }
+                return try {
+                    /*val fileContent = javaClass.getResource("myfile.txt")
+                    val inputPath: Path = Paths.get(fileContent.toString())
+                    Files.readAllBytes(inputPath)*/
+                    this::class.java.getResource("/myfile.txt")!!.readBytes()
+                } catch (e: Exception) {
+                    ByteArray(0)
+                }
+            }*/
 
         //sample signature
-        val samplesig = ecHelper.generateECSignature(privateKey, input)
+        val samplesig = ecHelper.generateECSignature(input)
 
         //sample input hash
         val inputHash = ecHelper.generateSHA256Hash(input)
@@ -83,6 +82,7 @@ open class MyBenchmark {
         val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", provider)
     }
 
+    /*
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
@@ -91,7 +91,7 @@ open class MyBenchmark {
     @Fork(value = 1)
     fun baseline() {
     }
-
+     */
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
@@ -113,7 +113,7 @@ open class MyBenchmark {
     @Fork(value = 1)
     fun signBenchmark(state: SetupClass): ByteArray {
         val signature = Signature.getInstance("SHA256withECDSA", SetupClass.provider)
-        signature.initSign(state.privateKey)
+        signature.initSign(state.ecHelper.privateKey)
         signature.update(state.input)
         return signature.sign()
     }
@@ -125,7 +125,7 @@ open class MyBenchmark {
     @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
     @Fork(value = 1)
     fun signBenchmark_preSignObj(state: SetupClass): ByteArray {
-        state.sigobj.initSign(state.privateKey)
+        state.sigobj.initSign(state.ecHelper.privateKey)
         state.sigobj.update(state.input)
         return state.sigobj.sign()
     }
@@ -138,7 +138,7 @@ open class MyBenchmark {
     @Fork(value = 1)
     fun signWithoutHashBenchmark(state: SetupClass): ByteArray {
         val signature = Signature.getInstance("NoneWithECDSA", SetupClass.provider)
-        signature.initSign(state.privateKey)
+        signature.initSign(state.ecHelper.privateKey)
         signature.update(state.inputHash)
         return signature.sign()
     }
@@ -150,7 +150,7 @@ open class MyBenchmark {
     @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
     @Fork(value = 1)
     fun signWithoutHashBenchmark_preSigObj(state: SetupClass): ByteArray {
-        state.sigobjnohash.initSign(state.privateKey)
+        state.sigobjnohash.initSign(state.ecHelper.privateKey)
         state.sigobjnohash.update(state.inputHash)
         return state.sigobjnohash.sign()
     }
@@ -163,7 +163,7 @@ open class MyBenchmark {
     @Fork(value = 1)
     fun verifyBenchmark(state: SetupClass): Boolean {
         val signature = Signature.getInstance("SHA256withECDSA", SetupClass.provider)
-        signature.initVerify(state.publicKey)
+        signature.initVerify(state.ecHelper.publicKey)
         signature.update(state.input)
         return signature.verify(state.samplesig)
     }
@@ -175,7 +175,7 @@ open class MyBenchmark {
     @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
     @Fork(value = 1)
     fun verifyBenchmark_preSigObj(state: SetupClass): Boolean {
-        state.sigobj.initVerify(state.publicKey)
+        state.sigobj.initVerify(state.ecHelper.publicKey)
         state.sigobj.update(state.input)
         return state.sigobj.verify(state.samplesig)
     }

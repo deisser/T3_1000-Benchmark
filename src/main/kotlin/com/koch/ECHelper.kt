@@ -6,14 +6,18 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.util.io.pem.PemReader
 import java.io.File
 import java.io.FileReader
+import java.nio.file.Paths
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
 
-//TODO: Pfade zu den Keys entgegennehmen und laden
-class ECHelper() {
-    fun generateECSignature(ecPrivate: PrivateKey, input: ByteArray): ByteArray {
+class ECHelper(privKeyPath: String, pubKeyPath: String) {
+
+    val publicKey = readPublicKey(pubKeyPath)
+    val privateKey = readPrivateKey(privKeyPath)
+
+    fun generateECSignature(input: ByteArray): ByteArray {
         val signature = Signature.getInstance("SHA256withECDSA", MyBenchmark.SetupClass.provider)
-        signature.initSign(ecPrivate)
+        signature.initSign(privateKey)
         signature.update(input)
         return signature.sign()
     }
@@ -25,7 +29,9 @@ class ECHelper() {
     }
 
     fun readPrivateKey(path: String): PrivateKey {
-        val privKeyFile = File(path)
+        //TODO: Fix key reading
+        //val privKeyFile = File(ResourceUtil.loadResource(path).toString())
+        val privKeyFile = File(this::class.java.getResource(path)!!.toString())
         return try {
             val keyReader = FileReader(privKeyFile)
             val pemParser = PEMParser(keyReader)
@@ -38,7 +44,9 @@ class ECHelper() {
     }
 
     fun readPublicKey(path: String): PublicKey {
-        val pubKeyFile = File(path)
+        //TODO: Fix key reading
+        //val pubKeyFile = File(ResourceUtil.loadResource(path).toString())
+        val pubKeyFile = File(this::class.java.getResource(path)!!.toString())
         val keyFactory = KeyFactory.getInstance("EC", MyBenchmark.SetupClass.provider)
         return try {
             val keyReader = FileReader(pubKeyFile)
