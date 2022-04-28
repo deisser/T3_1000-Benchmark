@@ -1,0 +1,50 @@
+/*@Setup
+    fun startup() {
+        Security.addProvider(BouncyCastleProvider())
+
+        val ecHelper =
+            ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
+
+        //read input file
+        val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
+
+        //sample signature
+        val samplesig = ecHelper.generateECSignature(input)
+
+        //sample input hash
+        val inputHash = ecHelper.generateSHA256Hash(input)
+
+        //sample signature object
+        val sigobj: Signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
+        val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
+    }*/
+
+    /*//TODO: Was macht Scope.Thread?
+    @State(Scope.Benchmark)
+    open class SetupClass {
+
+        init {
+            Security.addProvider(BouncyCastleProvider())
+        }
+
+        //companion object {
+        //    const val provider = "BC"
+        //}
+
+        val ecHelper =
+            ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
+
+        //read input file
+        val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
+
+        //sample signature
+        val samplesig = ecHelper.generateECSignature(input)
+
+        //sample input hash
+        val inputHash = ecHelper.generateSHA256Hash(input)
+
+        //sample signature object
+        val sigobj: Signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
+        val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
+    }
+*/

@@ -38,143 +38,97 @@ import java.security.Security
 import java.security.Signature
 import java.util.concurrent.TimeUnit
 
+@State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
+@BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
+@OutputTimeUnit(TimeUnit.SECONDS)   //Misst die Methodenaufrufe in Sekunden
+@Warmup(iterations = 2, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(value = 1)
 open class MyBenchmark {
 
-    //TODO: Was macht Scope.Thread?
-    @State(Scope.Thread)
-    open class SetupClass {
-
-        init {
-            Security.addProvider(BouncyCastleProvider())
-        }
-
-        companion object {
-            const val provider = "BC"
-        }
-
-        val ecHelper =
-            ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
-
-        //read input file
-        val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
-
-
-        /*val input: ByteArray
-            get() {
-                return try {
-                    /*val fileContent = javaClass.getResource("myfile.txt")
-                    val inputPath: Path = Paths.get(fileContent.toString())
-                    Files.readAllBytes(inputPath)*/
-                    this::class.java.getResource("/myfile.txt")!!.readBytes()
-                } catch (e: Exception) {
-                    ByteArray(0)
-                }
-            }*/
-
-        //sample signature
-        val samplesig = ecHelper.generateECSignature(input)
-
-        //sample input hash
-        val inputHash = ecHelper.generateSHA256Hash(input)
-
-        //sample signature object
-        val sigobj: Signature = Signature.getInstance("SHA256withECDSA", provider)
-        val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", provider)
+    init {
+        Security.addProvider(BouncyCastleProvider())
     }
+
+    /*@Setup
+    fun settingUp(){
+
+    }*/
+
+    companion object {
+        const val PROVIDER = "BC"
+    }
+
+    val ecHelper =
+        ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
+
+    //read input file
+    val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
+
+    //sample signature
+    val samplesig = ecHelper.generateECSignature(input)
+
+    //sample input hash
+    val inputHash = ecHelper.generateSHA256Hash(input)
+
+    //sample signature object
+    val sigobj: Signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
+    val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
+    
 
     /*
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
     fun baseline() {
     }
      */
 
-    @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun hashBenchmark(state: SetupClass): ByteArray {
-        val messageDigest = MessageDigest.getInstance("SHA-256", SetupClass.provider)
+    @Benchmark  //Sorgt dafür, dass diese Methode gebenchmarkt wird
+    fun hashBenchmark(state: MyBenchmark): ByteArray {
+        val messageDigest = MessageDigest.getInstance("SHA-256", PROVIDER)
         messageDigest.update(state.input)
         return messageDigest.digest()
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun signBenchmark(state: SetupClass): ByteArray {
-        val signature = Signature.getInstance("SHA256withECDSA", SetupClass.provider)
+    fun signBenchmark(state: MyBenchmark): ByteArray {
+        val signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
         signature.initSign(state.ecHelper.privateKey)
         signature.update(state.input)
         return signature.sign()
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun signBenchmark_preSignObj(state: SetupClass): ByteArray {
+    fun signBenchmark_preSignObj(state: MyBenchmark): ByteArray {
         state.sigobj.initSign(state.ecHelper.privateKey)
         state.sigobj.update(state.input)
         return state.sigobj.sign()
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun signWithoutHashBenchmark(state: SetupClass): ByteArray {
-        val signature = Signature.getInstance("NoneWithECDSA", SetupClass.provider)
+    fun signWithoutHashBenchmark(state: MyBenchmark): ByteArray {
+        val signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
         signature.initSign(state.ecHelper.privateKey)
         signature.update(state.inputHash)
         return signature.sign()
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun signWithoutHashBenchmark_preSigObj(state: SetupClass): ByteArray {
+    fun signWithoutHashBenchmark_preSigObj(state: MyBenchmark): ByteArray {
         state.sigobjnohash.initSign(state.ecHelper.privateKey)
         state.sigobjnohash.update(state.inputHash)
         return state.sigobjnohash.sign()
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun verifyBenchmark(state: SetupClass): Boolean {
-        val signature = Signature.getInstance("SHA256withECDSA", SetupClass.provider)
+    fun verifyBenchmark(state: MyBenchmark): Boolean {
+        val signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
         signature.initVerify(state.ecHelper.publicKey)
         signature.update(state.input)
         return signature.verify(state.samplesig)
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
-    @Warmup(iterations = 3, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Fork(value = 1)
-    fun verifyBenchmark_preSigObj(state: SetupClass): Boolean {
+    fun verifyBenchmark_preSigObj(state: MyBenchmark): Boolean {
         state.sigobj.initVerify(state.ecHelper.publicKey)
         state.sigobj.update(state.input)
         return state.sigobj.verify(state.samplesig)
