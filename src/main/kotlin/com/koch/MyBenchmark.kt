@@ -41,19 +41,14 @@ import java.util.concurrent.TimeUnit
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
 @OutputTimeUnit(TimeUnit.SECONDS)   //Misst die Methodenaufrufe in Sekunden
-@Warmup(iterations = 2, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
-@Measurement(iterations = 30, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-@Fork(value = 1)
+@Warmup(iterations = 2, time = 10000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 1, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class MyBenchmark {
 
     init {
         Security.addProvider(BouncyCastleProvider())
     }
-
-    /*@Setup
-    fun settingUp(){
-
-    }*/
 
     companion object {
         const val PROVIDER = "BC"
@@ -74,13 +69,8 @@ open class MyBenchmark {
     //sample signature object
     val sigobj: Signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
     val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
-    
 
-    /*
-    @Benchmark
-    fun baseline() {
-    }
-     */
+
 
     @Benchmark  //Sorgt dafür, dass diese Methode gebenchmarkt wird
     fun hashBenchmark(state: MyBenchmark): ByteArray {
@@ -132,5 +122,9 @@ open class MyBenchmark {
         state.sigobj.initVerify(state.ecHelper.publicKey)
         state.sigobj.update(state.input)
         return state.sigobj.verify(state.samplesig)
+    }
+
+    @Benchmark
+    fun baseline() {
     }
 }

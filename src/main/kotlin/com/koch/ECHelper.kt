@@ -4,8 +4,8 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.bouncycastle.util.io.pem.PemReader
-import java.io.*
-import java.nio.file.Paths
+import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
 
@@ -28,10 +28,8 @@ class ECHelper(privKeyPath: String, pubKeyPath: String) {
     }
 
     fun readPrivateKey(path: String): PrivateKey {
-        //TODO: Fix key reading
         val privKeyFile = InputStreamReader(ByteArrayInputStream(ResourceUtil.loadResource(path).readBytes()))
         return try {
-            //val keyReader = FileReader(privKeyFile)
             val pemParser = PEMParser(privKeyFile)
             val converter = JcaPEMKeyConverter()
             val privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject())
@@ -42,12 +40,9 @@ class ECHelper(privKeyPath: String, pubKeyPath: String) {
     }
 
     fun readPublicKey(path: String): PublicKey {
-        //TODO: Fix key reading
-        //val pubKeyFile = File(ResourceUtil.loadResource(path).toString())
         val pubKeyFile = InputStreamReader(ByteArrayInputStream(ResourceUtil.loadResource(path).readBytes()))
         val keyFactory = KeyFactory.getInstance("EC", MyBenchmark.PROVIDER)
         return try {
-            //val keyReader = FileReader(pubKeyFile)
             val pemReader = PemReader(pubKeyFile)
             val pemObject = pemReader.readPemObject()
             val content = pemObject.content
