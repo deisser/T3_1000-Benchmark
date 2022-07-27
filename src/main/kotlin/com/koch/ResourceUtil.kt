@@ -10,7 +10,7 @@ class ResourceUtil {
             return try {
                 this::class.java.getResource(resource)
             } catch (e: Exception) {
-                throw Exception("There was an error when loading the ressource $resource: $e")
+                throw Exception("There was an error when loading the resource $resource: $e")
             }
         }
     }

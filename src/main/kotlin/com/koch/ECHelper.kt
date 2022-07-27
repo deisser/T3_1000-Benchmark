@@ -41,7 +41,12 @@ class ECHelper(privKeyPath: String, pubKeyPath: String) {
 
     fun readPublicKey(path: String): PublicKey {
         val pubKeyFile = InputStreamReader(ByteArrayInputStream(ResourceUtil.loadResource(path).readBytes()))
-        val keyFactory = KeyFactory.getInstance("EC", MyBenchmark.PROVIDER)
+        val keyAlgorithm = if (MyBenchmark.PROVIDER == "BC") "EC" else "ECDSA"
+        val keyFactory = KeyFactory.getInstance(keyAlgorithm, MyBenchmark.PROVIDER)
+        /*val bcBenchmarkProvider = BenchmarkProvider("BC","EC")
+        val nCipherBenchmarkProvider = BenchmarkProvider("nCipherKM", "ECDSA")
+        KeyFactory.getInstance(bcBenchmarkProvider.keyAlgorithm, bcBenchmarkProvider.provider)*/
+
         return try {
             val pemReader = PemReader(pubKeyFile)
             val pemObject = pemReader.readPemObject()
@@ -54,3 +59,5 @@ class ECHelper(privKeyPath: String, pubKeyPath: String) {
     }
 
 }
+
+data class BenchmarkProvider(val provider: String, val keyAlgorithm: String)

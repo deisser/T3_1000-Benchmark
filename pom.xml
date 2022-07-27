@@ -43,7 +43,13 @@ THE POSSIBILITY OF SUCH DAMAGE.
        Edit as needed. It needs a proper dependency on Kotlin library to compile, as well as
        the plugin version set to most recent Kotlin compiler.
     -->
-
+    <repositories>
+        <repository>
+            <id>project.local</id>
+            <name>project</name>
+            <url>C:\Users\KOMARIS\.m2</url>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
@@ -59,6 +65,11 @@ THE POSSIBILITY OF SUCH DAMAGE.
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.70</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nCipher</groupId>
+            <artifactId>nCipherKM</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
 

@@ -31,6 +31,7 @@
 
 package com.koch
 
+import com.ncipher.provider.km.nCipherKM
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.openjdk.jmh.annotations.*
 import java.security.MessageDigest
@@ -48,11 +49,20 @@ open class MyBenchmark {
 
     init {
         Security.addProvider(BouncyCastleProvider())
+        Security.addProvider(nCipherKM())
     }
 
     companion object {
-        const val PROVIDER = "BC"
+        //const val PROVIDER = "BC"
+        const val PROVIDER = "nCipherKM"
     }
+
+   /* val obj;
+    if(provider == ...) {
+        obj = dataclass("..." ":::")
+    } else {
+        obj = dataclass("___" "+++")
+    }*/
 
     val ecHelper =
         ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
