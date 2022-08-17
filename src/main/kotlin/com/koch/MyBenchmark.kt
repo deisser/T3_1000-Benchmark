@@ -32,6 +32,9 @@
 package com.koch
 
 import com.ncipher.provider.km.nCipherKM
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.openjdk.jmh.annotations.*
 import java.security.MessageDigest
@@ -39,99 +42,142 @@ import java.security.Security
 import java.security.Signature
 import java.util.concurrent.TimeUnit
 
+var pickedProvider = "ncipher"
+var pickedCurve = "p256"
+//var info = InformationSupplier("bc", "p256")
+
+fun main(args: Array<String>) {
+    val validCurves = listOf("p256", "p384", "p521")
+    val validProviders = listOf("bc", "ncipher")
+    val parser = ArgParser("ECCBenchmark")
+    val curve by parser.option(
+        ArgType.Choice(validCurves, { it }),
+        "curve",
+        "c",
+        description = "Name of the curve to be benchmarked"
+    ).default("p256")
+    val provider by parser.option(
+        ArgType.Choice(validProviders, { it }),
+        "provider",
+        "p",
+        description = "Name of provider to be used"
+    ).default("bc")
+
+    parser.parse(args)
+    if (!validCurves.contains(curve) || !validProviders.contains(provider)) {
+        println("Invalid options. Use one of valid curves and one of valid providers.")
+        println("Valid options can be seen at \"benchmarks.jar -h\"")
+        return
+    }
+
+    pickedCurve = curve
+    pickedProvider = provider
+
+    Supplier.getInstance(provider, curve)
+
+    // Supplier.providerInput = provider
+    // Supplier.curveInput = curve
+
+    println(Supplier.getInstance().provider)
+    // println(Supplier.getInstance().curveInput)
+
+    //info = InformationSupplier(provider, curve)
+
+    org.openjdk.jmh.Main.main(arrayOf<String>())
+}
+
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
-@OutputTimeUnit(TimeUnit.SECONDS)   //Misst die Methodenaufrufe in Sekunden
-@Warmup(iterations = 2, time = 10000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
-@Measurement(iterations = 1, time = 10000, timeUnit = TimeUnit.MILLISECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS) //Misst die Methodenaufrufe in Sekunden
+@Warmup(
+    iterations = 1,
+    time = 2000,
+    timeUnit = TimeUnit.MILLISECONDS
+) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 1, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class MyBenchmark {
 
-    init {
-        Security.addProvider(BouncyCastleProvider())
-        Security.addProvider(nCipherKM())
-    }
+    //init {
+    //    Security.addProvider(BouncyCastleProvider())
+        // Security.addProvider(nCipherKM())
+    //}
 
-    companion object {
-        //const val PROVIDER = "BC"
-        const val PROVIDER = "nCipherKM"
-    }
 
-   /* val obj;
-    if(provider == ...) {
-        obj = dataclass("..." ":::")
-    } else {
-        obj = dataclass("___" "+++")
-    }*/
+    //companion object {
+    //
+    //}
 
-    val ecHelper =
-        ECHelper("/secp521r1_pkcs8_private.pem", "/secp521r1_public.pem")
+    private val supplier = Supplier.getInstance(pickedProvider, pickedCurve)
 
     //read input file
-    val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
+    private val input: ByteArray = ResourceUtil.loadResource("/myfile.txt").readBytes()
 
     //sample signature
-    val samplesig = ecHelper.generateECSignature(input)
+    private val sampleSig = supplier.generateECSignature(input)
 
     //sample input hash
-    val inputHash = ecHelper.generateSHA256Hash(input)
+    private val inputHash = supplier.generateHash(input)
 
     //sample signature object
-    val sigobj: Signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
-    val sigobjnohash: Signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
+    private val sigObj: Signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
+    private val sigObjNoHash: Signature = Signature.getInstance(supplier.signatureAlgorithm, supplier.provider)
 
-
+    /*@Setup
+    fun init() {
+        info = InformationSupplier(pickedProvider, pickedCurve)
+    }*/
 
     @Benchmark  //Sorgt dafür, dass diese Methode gebenchmarkt wird
     fun hashBenchmark(state: MyBenchmark): ByteArray {
-        val messageDigest = MessageDigest.getInstance("SHA-256", PROVIDER)
+        val messageDigest = MessageDigest.getInstance(supplier.hashAlgorithm, supplier.provider)
         messageDigest.update(state.input)
         return messageDigest.digest()
     }
 
     @Benchmark
     fun signBenchmark(state: MyBenchmark): ByteArray {
-        val signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
-        signature.initSign(state.ecHelper.privateKey)
+        val signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
+        signature.initSign(supplier.privateKey)
         signature.update(state.input)
         return signature.sign()
     }
 
     @Benchmark
     fun signBenchmark_preSignObj(state: MyBenchmark): ByteArray {
-        state.sigobj.initSign(state.ecHelper.privateKey)
-        state.sigobj.update(state.input)
-        return state.sigobj.sign()
+        state.sigObj.initSign(supplier.privateKey)
+        state.sigObj.update(state.input)
+        return state.sigObj.sign()
     }
 
     @Benchmark
     fun signWithoutHashBenchmark(state: MyBenchmark): ByteArray {
-        val signature = Signature.getInstance("NoneWithECDSA", PROVIDER)
-        signature.initSign(state.ecHelper.privateKey)
+        val signature = Signature.getInstance(supplier.signatureAlgorithm, supplier.provider)
+        signature.initSign(supplier.privateKey)
         signature.update(state.inputHash)
         return signature.sign()
     }
 
     @Benchmark
     fun signWithoutHashBenchmark_preSigObj(state: MyBenchmark): ByteArray {
-        state.sigobjnohash.initSign(state.ecHelper.privateKey)
-        state.sigobjnohash.update(state.inputHash)
-        return state.sigobjnohash.sign()
+        state.sigObjNoHash.initSign(supplier.privateKey)
+        state.sigObjNoHash.update(state.inputHash)
+        return state.sigObjNoHash.sign()
     }
 
     @Benchmark
     fun verifyBenchmark(state: MyBenchmark): Boolean {
-        val signature = Signature.getInstance("SHA256withECDSA", PROVIDER)
-        signature.initVerify(state.ecHelper.publicKey)
+        val signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
+        signature.initVerify(supplier.publicKey)
         signature.update(state.input)
-        return signature.verify(state.samplesig)
+        return signature.verify(state.sampleSig)
     }
 
     @Benchmark
     fun verifyBenchmark_preSigObj(state: MyBenchmark): Boolean {
-        state.sigobj.initVerify(state.ecHelper.publicKey)
-        state.sigobj.update(state.input)
-        return state.sigobj.verify(state.samplesig)
+        state.sigObj.initVerify(supplier.publicKey)
+        state.sigObj.update(state.input)
+        return state.sigObj.verify(state.sampleSig)
     }
 
     @Benchmark

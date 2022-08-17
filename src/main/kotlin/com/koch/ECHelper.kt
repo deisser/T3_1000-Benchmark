@@ -11,18 +11,20 @@ import java.security.spec.X509EncodedKeySpec
 
 class ECHelper(privKeyPath: String, pubKeyPath: String) {
 
+    private val supplier = Supplier.getInstance()
+
     val publicKey = readPublicKey(pubKeyPath)
     val privateKey = readPrivateKey(privKeyPath)
 
     fun generateECSignature(input: ByteArray): ByteArray {
-        val signature = Signature.getInstance("SHA256withECDSA", MyBenchmark.PROVIDER)
+        val signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
         signature.initSign(privateKey)
         signature.update(input)
         return signature.sign()
     }
 
     fun generateSHA256Hash(input: ByteArray): ByteArray {
-        val messageDigest = MessageDigest.getInstance("SHA-256", MyBenchmark.PROVIDER)
+        val messageDigest = MessageDigest.getInstance(supplier.hashAlgorithm, supplier.provider)
         messageDigest.update(input)
         return messageDigest.digest()
     }
@@ -41,8 +43,8 @@ class ECHelper(privKeyPath: String, pubKeyPath: String) {
 
     fun readPublicKey(path: String): PublicKey {
         val pubKeyFile = InputStreamReader(ByteArrayInputStream(ResourceUtil.loadResource(path).readBytes()))
-        val keyAlgorithm = if (MyBenchmark.PROVIDER == "BC") "EC" else "ECDSA"
-        val keyFactory = KeyFactory.getInstance(keyAlgorithm, MyBenchmark.PROVIDER)
+        val keyAlgorithm = if (supplier.provider == "BC") "EC" else "ECDSA"
+        val keyFactory = KeyFactory.getInstance(keyAlgorithm, supplier.provider)
         /*val bcBenchmarkProvider = BenchmarkProvider("BC","EC")
         val nCipherBenchmarkProvider = BenchmarkProvider("nCipherKM", "ECDSA")
         KeyFactory.getInstance(bcBenchmarkProvider.keyAlgorithm, bcBenchmarkProvider.provider)*/
