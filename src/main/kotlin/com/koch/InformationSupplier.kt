@@ -58,7 +58,8 @@ class Supplier private constructor(private val providerInput: String, private va
     private val ecHelper: ECHelper
             by lazy {
                 if (curveInput == "p256") {
-                    ECHelper("/ecprime256v1_pkcs8_private.pem", "/ecprime256v1_public.pem")
+                    //ECHelper("/ecprime256v1_pkcs8_private.pem", "/ecprime256v1_public.pem")
+                    ECHelper("/secp256k1_pkcs8_prv.pem", "/secp256k1_pub.pem")
                 } else if (curveInput == "p384") {
                     ECHelper("/secp384r1_pkcs8_prv.pem", "/secp384r1_pub.pem")
                 } else if (curveInput == "p521") {
@@ -87,10 +88,14 @@ class Supplier private constructor(private val providerInput: String, private va
     val publicKey by lazy { ecHelper.publicKey }
 
     fun generateECSignature(input: ByteArray): ByteArray {
+        println(curveInput)
+        println(providerInput)
         return ecHelper.generateECSignature(input)
     }
 
     fun generateHash(input: ByteArray): ByteArray {
+        println(curveInput)
+        println(providerInput)
         return ecHelper.generateSHA256Hash(input)
     }
 

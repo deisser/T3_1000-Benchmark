@@ -31,18 +31,30 @@
 
 package com.koch
 
-import com.ncipher.provider.km.nCipherKM
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.openjdk.jmh.annotations.*
 import java.security.MessageDigest
-import java.security.Security
 import java.security.Signature
 import java.util.concurrent.TimeUnit
 
-var pickedProvider = "ncipher"
+/**
+ * Hier müssen derzeit Provider und Kurve eingestellt werden.
+ * Mögliche Optionen:
+ * - Provider: "bc", "ncipher"
+ * - Kurven: "p256", "p384", "p521"
+ *
+ * Warum ist das so unschön gelöst?
+ *
+ * Mit jmh ist das problematisch. In jedem Benchmark wird das Singleton (InformationSupplier) zurückgesetzt, wodurch wegen
+ * des default-Strings "" immer in die RuntimeException reingelaufen wird, weil "" eine nicht zulässige
+ * Kurve bzw. Provider ist. Das kann in der Main beim Argument-parsen nicht abgefangen werden, weil es beim ersten Durchlauf
+ * ein legales Argument ist, wie in den Defaults des Parsens hinterlegt. Aber eben nur beim ersten Durchlauf.
+ *
+ * Das tut zur reinen Messung allerdings nichts zur Sache. Man muss Kurve und Provider nur händisch im Code einstellen.
+ */
+var pickedProvider = "bc"
 var pickedCurve = "p256"
 //var info = InformationSupplier("bc", "p256")
 
@@ -100,7 +112,7 @@ open class MyBenchmark {
 
     //init {
     //    Security.addProvider(BouncyCastleProvider())
-        // Security.addProvider(nCipherKM())
+    // Security.addProvider(nCipherKM())
     //}
 
 
