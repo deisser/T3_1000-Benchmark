@@ -13,6 +13,11 @@ This benchmark is the practical part of the T3_1000 thesis of Maris Koch from Au
 - The artifact is named `benchmarks.jar` and is located at `./target/benchmarks.jar`
 - To run the benchmarks use `java -jar benchmarks.jar` or the corresponding path to the artifact
 
+### Where are the Benchmarks
+
+The Benchmarks are all in `./src/main/kotlin/com/koch/Benchmark.kt`. Every Method with `@Benchmark` annotation
+will be benchmarked.
+
 ### CLI interaction (not working at the moment)
 
 - `--curve` or `-c` to choose curve. Options: `p256`, `p384`, `p521`
@@ -25,7 +30,7 @@ arguments can not be used for the entire benchmark. The reset of the singleton l
 ### Choose what to benchmark
 
 Since the CLI interaction is not working at the moment, the way to pick a provider and a curve is through
-`./src/main/kotlin/com/koch/MaBenchmark.kt`. Insert one of the options listed above for provider and curve into the
+`./src/main/kotlin/com/koch/Benchmark.kt`. Insert one of the options listed above for provider and curve into the
 variables `pickedProvider` and `pickedCurve` at the top of the file.
 
 ### Libraries
