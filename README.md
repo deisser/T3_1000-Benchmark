@@ -46,4 +46,4 @@ Further documentation can be taken from the kotlinx-cli repository. **Currently,
 
 A tunnel to the HSM must be active. Use Putty. Otherwise, there will be an error of the form `ServerNotRunning`.
 
-Submission Date of thesis: 05.09.2022
+Submission date of thesis: 05.09.2022

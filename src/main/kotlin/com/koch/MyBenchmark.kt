@@ -35,12 +35,11 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import org.openjdk.jmh.annotations.*
-import java.security.MessageDigest
 import java.security.Signature
 import java.util.concurrent.TimeUnit
 
 /**
- * Hier müssen derzeit Provider und Kurve eingestellt werden.
+ * In den Variablen "pickedProvider" und "pickedCurve" müssen Provider und Kurve eingestellt werden.
  * Mögliche Optionen:
  * - Provider: "bc", "ncipher"
  * - Kurven: "p256", "p384", "p521"
@@ -54,8 +53,8 @@ import java.util.concurrent.TimeUnit
  *
  * Das tut zur reinen Messung allerdings nichts zur Sache. Man muss Kurve und Provider nur händisch im Code einstellen.
  */
-var pickedProvider = "bc"
-var pickedCurve = "p256"
+var pickedProvider = "ncipher"
+var pickedCurve = "p521"
 //var info = InformationSupplier("bc", "p256")
 
 fun main(args: Array<String>) {
@@ -76,7 +75,7 @@ fun main(args: Array<String>) {
     ).default("bc")
 
     parser.parse(args)
-    if (!validCurves.contains(curve) || !validProviders.contains(provider)) {
+    if (!validCurves.contains(pickedCurve) || !validProviders.contains(pickedProvider)) {
         println("Invalid options. Use one of valid curves and one of valid providers.")
         println("Valid options can be seen at \"benchmarks.jar -h\"")
         return
@@ -101,12 +100,8 @@ fun main(args: Array<String>) {
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
 @OutputTimeUnit(TimeUnit.SECONDS) //Misst die Methodenaufrufe in Sekunden
-@Warmup(
-    iterations = 1,
-    time = 2000,
-    timeUnit = TimeUnit.MILLISECONDS
-) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
-@Measurement(iterations = 1, time = 2000, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 1, time = 2000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 2, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class MyBenchmark {
 
@@ -140,13 +135,14 @@ open class MyBenchmark {
         info = InformationSupplier(pickedProvider, pickedCurve)
     }*/
 
-    @Benchmark  //Sorgt dafür, dass diese Methode gebenchmarkt wird
+    /*@Benchmark  //Sorgt dafür, dass diese Methode gebenchmarkt wird
+    //auch raus lassen, ergibt wenig Sinn, wenn schon ein signBenchmark und ein signWithoutHashBenchmark existiert
     fun hashBenchmark(state: MyBenchmark): ByteArray {
         val messageDigest = MessageDigest.getInstance(supplier.hashAlgorithm, supplier.provider)
         messageDigest.update(state.input)
         return messageDigest.digest()
     }
-
+*/
     @Benchmark
     fun signBenchmark(state: MyBenchmark): ByteArray {
         val signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
@@ -162,6 +158,7 @@ open class MyBenchmark {
         return state.sigObj.sign()
     }
 
+    //hier muss dann im build für nCipher die custom implementierung aus NCipherPreHashSignProvider.kt verwendet werden
     @Benchmark
     fun signWithoutHashBenchmark(state: MyBenchmark): ByteArray {
         val signature = Signature.getInstance(supplier.signatureAlgorithm, supplier.provider)
@@ -170,13 +167,16 @@ open class MyBenchmark {
         return signature.sign()
     }
 
-    @Benchmark
-    fun signWithoutHashBenchmark_preSigObj(state: MyBenchmark): ByteArray {
-        state.sigObjNoHash.initSign(supplier.privateKey)
-        state.sigObjNoHash.update(state.inputHash)
-        return state.sigObjNoHash.sign()
-    }
-
+    /*
+        //obsolet, da hierfür kein Vergleich zwischen BC und nCipher möglich ist.
+        //
+        @Benchmark
+        fun signWithoutHashBenchmark_preSigObj(state: MyBenchmark): ByteArray {
+            state.sigObjNoHash.initSign(supplier.privateKey)
+            state.sigObjNoHash.update(state.inputHash)
+            return state.sigObjNoHash.sign()
+        }
+    */
     @Benchmark
     fun verifyBenchmark(state: MyBenchmark): Boolean {
         val signature = Signature.getInstance(supplier.hashSignatureAlgorithm, supplier.provider)
@@ -190,9 +190,5 @@ open class MyBenchmark {
         state.sigObj.initVerify(supplier.publicKey)
         state.sigObj.update(state.input)
         return state.sigObj.verify(state.sampleSig)
-    }
-
-    @Benchmark
-    fun baseline() {
     }
 }
