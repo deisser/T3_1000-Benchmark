@@ -1,40 +1,6 @@
-/*
- * Copyright (c) 2014, Oracle America, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  * Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- *  * Neither the name of Oracle nor the names of its contributors may be used
- *    to endorse or promote products derived from this software without
- *    specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.koch
 
 import com.ncipher.provider.CoreECKey
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.default
 import org.openjdk.jmh.annotations.*
 import java.security.Signature
 import java.util.concurrent.TimeUnit
@@ -54,43 +20,23 @@ import java.util.concurrent.TimeUnit
  *
  * Das tut zur reinen Messung allerdings nichts zur Sache. Man muss Kurve und Provider nur händisch im Code einstellen.
  */
-var pickedProvider = "bc"
-var pickedCurve = "p256"
+var pickedProvider = "ncipher"
+var pickedCurve = "p521"
 
-fun main(args: Array<String>) {
-    val validCurves = listOf("p256", "p384", "p521")
-    val validProviders = listOf("bc", "ncipher")
-    val parser = ArgParser("ECCBenchmark")
-    val curve by parser.option(
-        ArgType.Choice(validCurves, { it }),
-        "curve",
-        "c",
-        description = "Name of the curve to be benchmarked"
-    ).default("p256")
-    val provider by parser.option(
-        ArgType.Choice(validProviders, { it }),
-        "provider",
-        "p",
-        description = "Name of provider to be used"
-    ).default("bc")
-
-    parser.parse(args)
-    if (!validCurves.contains(pickedCurve) || !validProviders.contains(pickedProvider)) {
-        println("Invalid options. Use one of valid curves and one of valid providers.")
-        println("Valid options can be seen at \"benchmarks.jar -h\"")
-        return
-    }
-    pickedCurve = curve
-    pickedProvider = provider
-    Supplier.getInstance(provider, curve)
+fun main() {
+    Supplier.getInstance(pickedProvider, pickedCurve)
     org.openjdk.jmh.Main.main(arrayOf<String>())
 }
 
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
 @OutputTimeUnit(TimeUnit.SECONDS) //Misst die Methodenaufrufe in Sekunden
-@Warmup(iterations = 1, time = 1000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
-@Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(
+    iterations = 1,
+    time = 1000,
+    timeUnit = TimeUnit.MILLISECONDS
+) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 30, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class LowWarmup {
 
@@ -155,8 +101,12 @@ open class LowWarmup {
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
 @OutputTimeUnit(TimeUnit.SECONDS) //Misst die Methodenaufrufe in Sekunden
-@Warmup(iterations = 4, time = 1000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
-@Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(
+    iterations = 5,
+    time = 1000,
+    timeUnit = TimeUnit.MILLISECONDS
+) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 30, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class MediumWarmup {
 
@@ -223,8 +173,12 @@ open class MediumWarmup {
 @State(Scope.Benchmark) //Ganzer Benchmark benutzt eine Instanz der Klasse. Mehrere Instanzen nicht notwendig, weil in der Klasse nichts überschrieben wird o.ä.
 @BenchmarkMode(Mode.Throughput) //Misst den Umsatz an Methodenaufrufen
 @OutputTimeUnit(TimeUnit.SECONDS) //Misst die Methodenaufrufe in Sekunden
-@Warmup(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
-@Measurement(iterations = 10, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(
+    iterations = 10,
+    time = 1000,
+    timeUnit = TimeUnit.MILLISECONDS
+) //Notwendig, da die JVM mit mehrfachem Ausführen von Prozessen schneller wird; siehe Favorit "T1000/JVMWarmup"
+@Measurement(iterations = 30, time = 1000, timeUnit = TimeUnit.MILLISECONDS)
 @Fork(value = 1)    //Jeder Benchmark wird einmal ausgeführt
 open class HighWarmup {
 
