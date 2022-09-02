@@ -1,5 +1,0 @@
-Benchmark                              Mode  Cnt         Score         Error  Units
-MyBenchmark.baseline                  thrpt   30  54774462,639 ± 4832519,402  ops/s
-MyBenchmark.signBenchmark             thrpt   30        66,289 ±       0,902  ops/s
-MyBenchmark.signWihtoutHashBenchmark  thrpt   30        66,534 ±       0,513  ops/s
-MyBenchmark.verifyBenchmark           thrpt   30       200,431 ±       1,952  ops/s
