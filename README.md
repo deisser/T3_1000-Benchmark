@@ -2,7 +2,7 @@
 
 This benchmark is the practical part of the T3_1000 thesis of Maris Koch from August/September 2022.
 
-### Title:
+### Title: 
 
 > Performancevergleich von den opensource Kryptobibliotheken OpenSSL und BouncyCastle zu einem Hardware Security Module
 > beim Ausführen von Kryptooperationen mit elliptischen Kurven
